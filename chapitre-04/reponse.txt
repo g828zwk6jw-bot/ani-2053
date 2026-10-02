@@ -1,0 +1,11 @@
+Ce que la coquille fait a ma place :
+
+Elle prépare la fenêtre, le renderer, l'horloge et la boucle principale. Elle me permet donc de me concentrer sur le contenu de mon application.
+
+Ce qui se passe si je configure dans OnInit :
+
+La fenêtre est déjà créée avant OnInit. Les changements de configuration effectués dans OnInit ne modifient donc pas la fenêtre comme prévu.
+
+Ce qui se passe sans NKMain.h :
+
+Le programme peut compiler, mais l'édition de liens échoue car le point d'entrée nkmain attendu n'est pas fourni correctement.
