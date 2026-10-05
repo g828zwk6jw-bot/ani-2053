@@ -1,0 +1,11 @@
+What the shell gives me :
+
+The shell creates and manages the window, the main loop, frame timing, and the frame lifecycle. I only need to configure the application, update the square with dt, and draw it.
+
+What it takes from me :
+
+The shell takes away direct control over the window and rendering loop. I do not decide exactly how events, timing, Clear, and Display are handled.
+
+When I would choose the hand-written loop :
+
+I would choose the hand-written loop when I need precise control over the order of events, timing, or rendering. I would choose NkCanvasApp when I want a shorter and simpler program
