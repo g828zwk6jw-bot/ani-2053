@@ -1,4 +1,4 @@
-include "NKThreading/NKThread.h"
+#include "NKThreading/NKThread.h"
 
 #include <iostream>
 
@@ -24,6 +24,8 @@ int main()
 
 {
 
+    // Test with eight threads
+
     compteur = 0;
 
     std::vector<NkThread> threads;
@@ -44,9 +46,19 @@ int main()
 
     }
 
-    std::cout << "Total: " << compteur << '\n';
+    std::cout << "Eight threads: " << compteur << '\n';
 
-    std::cout << "Expected total: " << 8000000 << '\n';
+    std::cout << "Expected: 8000000\n";
+
+    // Test with one thread
+
+    compteur = 0;
+
+    incrementer();
+
+    std::cout << "One thread: " << compteur << '\n';
+
+    std::cout << "Expected: 1000000\n";
 
     return 0;
 
