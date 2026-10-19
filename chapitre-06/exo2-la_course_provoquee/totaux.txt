@@ -1,0 +1,33 @@
+Ten totals:
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+Not measured
+
+One thread:
+
+Expected total: 1000000; actual total: not measured.
+
+Release:
+
+Three runs: not measured.
+
+Why:
+
+The expression compteur += 1 is not one indivisible operation. A thread reads the current value, adds one, then writes the result. If two threads read the same value before either writes, both can write the same incremented value, so one increment is lost. The expected total with eight threads is 8000000, but the actual total can be smaller and can vary between runs. The Release build may behave differently because compiler optimizations and timing change how the race manifests. A data race in C++ causes undefined behavior, so no particular result is guaranteed.
