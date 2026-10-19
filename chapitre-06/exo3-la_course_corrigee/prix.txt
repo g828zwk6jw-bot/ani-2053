@@ -1,11 +1,11 @@
-Unprotected: Total: not measured; median time: not measured ms.
+Unprotected: total = NOT MEASURED, median = NOT MEASURED ms
 
-Mutex: Total: not measured; median time: not measured ms.
+Mutex: total = NOT MEASURED, median = NOT MEASURED ms
 
-Atomic: Total: not measured; median time: not measured ms.
+Atomic: total = NOT MEASURED, median = NOT MEASURED ms
 
-Local: Total: not measured; median time: not measured ms.
+Local: total = NOT MEASURED, median = NOT MEASURED ms
 
-The cheapest: Cannot determine without Release measurements.
+The cheapest: NOT MEASURED
 
-Why: The unprotected version avoids locking overhead but has a data race, so its total is not reliable. The mutex version pays the cost of acquiring and releasing a lock for every increment, and threads may wait for one another. The atomic version pays for an atomic operation on each increment. The local version counts privately in each thread and adds the eight results after joining, avoiding shared writes during the loops. Actual Release measurements are needed to compare their costs fairly.
+Why: The local version avoids synchronizing access to a shared counter. The mutex version locks around every increment, while the atomic version uses atomic operations. The unprotected version has a data race, so its result is not reliable
