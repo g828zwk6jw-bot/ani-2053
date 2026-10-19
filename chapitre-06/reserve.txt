@@ -1,11 +1,11 @@
-Task: Sum 1,000 integers in a local variable. Repeat the same task 200 times in both versions. The long task repeats the calculation 100 times more.
+Task: Each task sums 1,000 integers in a local variable. Both methods run the same task 200 times. The long task repeats the calculation 100 times.
 
-Pool: [Enter time 1] ms, [Enter time 2] ms, [Enter time 3] ms
+Pool: Three measured times in milliseconds: pending measurement.
 
-Threads: [Enter time 1] ms, [Enter time 2] ms, [Enter time 3] ms
+Threads: Three measured times in milliseconds: pending measurement.
 
-Workers: [Enter the number returned by GetNumWorkers]
+Workers: Pending measurement using GetNumWorkers.
 
-Long task: Pool [enter measured time] ms, Threads [enter measured time] ms
+Long task: Pool time: pending measurement. Threads time: pending measurement.
 
-Why: Creating 200 separate threads has an overhead because the operating system must create and manage each thread. A thread pool reuses existing worker threads, so it is often faster for short tasks. When the task becomes 100 times longer, the calculation takes up more of the total time, so the overhead of creating threads matters less. The actual difference depends on the machine and must be determined by measurement.
+Why: Creating 200 separate threads has a cost because the operating system must create, schedule, and manage them. A thread pool reuses existing worker threads, which can reduce overhead for many short tasks. When each task becomes 100 times longer, the actual computation takes a larger share of the total time, so thread-creation overhead matters less. The real difference must be established by measurements.
