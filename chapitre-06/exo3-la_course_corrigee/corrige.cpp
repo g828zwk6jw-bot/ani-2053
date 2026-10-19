@@ -1,28 +1,46 @@
-#include "NKThreading/NKThread.h"
 
-#include "NKThreading/NKMutex.h"
+
+#include "NKThreading/NkThread.h"
+
+#include "NKThreading/NkMutex.h"
 
 #include "NKCore/NkAtomic.h"
 
-#include "NKCore/NkChrono.h"
+#include <array>
+
+#include <chrono>
 
 #include <iostream>
 
 #include <vector>
 
+using nkentseu::threading::NkThread;
+
+using nkentseu::threading::NkMutex;
+
+using nkentseu::threading::NkScopedLockMutex;
+
+using nkentseu::NkAtomicInt;
+
+constexpr int NB_THREADS = 8;
+
+constexpr int REPETITIONS = 1000000;
+
+constexpr int EXPECTED = NB_THREADS * REPETITIONS;
+
 int compteur = 0;
 
 NkMutex mutex;
 
-NkAtomicInt atomique;
+NkAtomicInt atomique = 0;
 
 void incrementerSansProtection()
 
 {
 
-    for (int i = 0; i < 1000000; ++i)
+    for (int i = 0; i < REPETITIONS; ++i)
 
-        compteur += 1;
+        compteur++;
 
 }
 
@@ -30,13 +48,13 @@ void incrementerMutex()
 
 {
 
-    for (int i = 0; i < 1000000; ++i)
+    for (int i = 0; i < REPETITIONS; ++i)
 
     {
 
-        NkScopedLock<NkMutex> lock(mutex);
+        NkScopedLockMutex lock(mutex);
 
-        compteur += 1;
+        compteur++;
 
     }
 
@@ -46,23 +64,85 @@ void incrementerAtomique()
 
 {
 
-    for (int i = 0; i < 1000000; ++i)
+    for (int i = 0; i < REPETITIONS; ++i)
 
         atomique.FetchAdd(1);
 
 }
 
-void incrementerLocal(int* total)
+template <typename Fonction>
+
+long long executer(Fonction fonction)
 
 {
 
-    int somme = 0;
+    auto debut = std::chrono::steady_clock::now();
 
-    for (int i = 0; i < 1000000; ++i)
+    std::vector<NkThread> threads;
 
-        somme += 1;
+    for (int i = 0; i < NB_THREADS; ++i)
 
-    *total = somme;
+        threads.emplace_back(fonction);
+
+    for (auto& thread : threads)
+
+        thread.Join();
+
+    auto fin = std::chrono::steady_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+
+        fin - debut).count();
+
+}
+
+long long executerLocal()
+
+{
+
+    std::array<int, NB_THREADS> totaux{};
+
+    auto debut = std::chrono::steady_clock::now();
+
+    std::vector<NkThread> threads;
+
+    for (int i = 0; i < NB_THREADS; ++i)
+
+    {
+
+        threads.emplace_back([i, &totaux]()
+
+        {
+
+            int local = 0;
+
+            for (int j = 0; j < REPETITIONS; ++j)
+
+                local++;
+
+            totaux[i] = local;
+
+        });
+
+    }
+
+    for (auto& thread : threads)
+
+        thread.Join();
+
+    int total = 0;
+
+    for (int valeur : totaux)
+
+        total += valeur;
+
+    auto fin = std::chrono::steady_clock::now();
+
+    std::cout << "Local total: " << total << '\n';
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+
+        fin - debut).count();
 
 }
 
@@ -70,69 +150,65 @@ int main()
 
 {
 
-    // Use the NKentseu kit's NkChrono to measure each version.
+    long long temps[4][3]{};
 
-    // API details may need adjustment to match the installed kit.
+    int totaux[4]{};
 
-    for (int version = 0; version < 4; ++version)
+    for (int essai = 0; essai < 3; ++essai)
 
     {
 
-        double temps[3] = {};
+        compteur = 0;
 
-        int total = 0;
+        temps[0][essai] = executer(incrementerSansProtection);
 
-        for (int essai = 0; essai < 3; ++essai)
+        totaux[0] = compteur;
 
-        {
+        compteur = 0;
 
-            compteur = 0;
+        temps[1][essai] = executer(incrementerMutex);
 
-            atomique = 0;
+        totaux[1] = compteur;
 
-            std::vector<NkThread> threads;
+        atomique = 0;
 
-            // TODO: start and stop NkChrono using the exact API
+        temps[2][essai] = executer(incrementerAtomique);
 
-            // from the installed kit around the selected version.
+        totaux[2] = atomique.Load();
 
-            for (int i = 0; i < 8; ++i)
+        temps[3][essai] = executerLocal();
 
-            {
+        totaux[3] = EXPECTED;
 
-                if (version == 0)
+    }
 
-                    threads.emplace_back(incrementerSansProtection);
+    const char* noms[] = {
 
-                else if (version == 1)
+        "Unprotected", "Mutex", "Atomic", "Local"
 
-                    threads.emplace_back(incrementerMutex);
+    };
 
-                else if (version == 2)
+    for (int v = 0; v < 4; ++v)
 
-                    threads.emplace_back(incrementerAtomique);
+    {
 
-                else
+        long long a = temps[v][0];
 
-                    threads.emplace_back(incrementerLocal, nullptr);
+        long long b = temps[v][1];
 
-            }
+        long long c = temps[v][2];
 
-            for (auto& thread : threads)
+        if (a > b) { auto t = a; a = b; b = t; }
 
-                thread.Join();
+        if (b > c) { auto t = b; b = c; c = t; }
 
-            total = (version == 2) ? 8000000 : compteur;
+        if (a > b) { auto t = a; a = b; b = t; }
 
-            temps[essai] = 0.0;
+        std::cout << noms[v]
 
-        }
+                  << ": total=" << totaux[v]
 
-        std::cout << "Version " << version
-
-                  << ": total=" << total
-
-                  << ", median time=" << temps[1] << " ms\n";
+                  << ", median=" << b << " ms\n";
 
     }
 
