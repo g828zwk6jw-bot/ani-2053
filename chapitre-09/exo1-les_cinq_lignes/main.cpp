@@ -128,13 +128,15 @@ string line;
 
                 states[index] = "SUPPRIME";
 
-            else
+         else
 
-                states[index] = "ECRIT";
+    states[index] = "ECRIT";
 
-        int count = 0;
+}
 
-    for (int i = 0; i < 5; i++) {
+}
+
+for (int i = 0; i < 5; i++) {
 
         if (states[i] != "ABSENT")
 
