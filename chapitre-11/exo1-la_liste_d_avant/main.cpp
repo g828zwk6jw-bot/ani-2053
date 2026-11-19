@@ -6,119 +6,157 @@
 
 #include <unordered_set>
 
+#include <unordered_map>
+
 using namespace std;
+
+struct Commit {
+
+    string hash;
+
+    string action;
+
+    vector<string> features;
+
+};
+
+struct Announcement {
+
+    string hash;
+
+    string state;
+
+    string feature;
+
+};
 
 int main() {
 
-    int n, c, a;
+    int H;
 
-    cin >> n;
+    cin >> H;
 
-    vector<string> avant(n);
+    vector<Commit> commits(H);
 
-    for (int i = 0; i < n; i++) {
+    unordered_map<string, int> positions;
 
-        cin >> avant[i];
+    for (int i = 0; i < H; i++) {
 
-    }
+        cin >> commits[i].hash;
 
-    cin >> c;
+        cin >> commits[i].action;
 
-    unordered_set<string> corrige;
+        int k;
 
-    for (int i = 0; i < c; i++) {
+        cin >> k;
 
-        string key;
+        positions[commits[i].hash] = i;
 
-        cin >> key;
+        for (int j = 0; j < k; j++) {
 
-        corrige.insert(key);
+            string feature;
 
-    }
+            cin >> feature;
 
-    cin >> a;
+            commits[i].features.push_back(feature);
 
-    unordered_set<string> apres;
-
-    for (int i = 0; i < a; i++) {
-
-        string key;
-
-        cin >> key;
-
-        apres.insert(key);
+        }
 
     }
 
-    int vraies = 0;
+    vector<unordered_set<string>> history(H);
 
-    int fausses = 0;
+    for (int i = 0; i < H; i++) {
 
-    int oubliees = 0;
+        if (i > 0) {
 
-    int nouvelles = 0;
+            history[i] = history[i - 1];
 
-    unordered_set<string> avantSet;
+        }
 
-    for (int i = 0; i < n; i++) {
+        for (const string& feature : commits[i].features) {
 
-        avantSet.insert(avant[i]);
+            if (commits[i].action == "AJOUTE") {
 
-        string category;
+                history[i].insert(feature);
 
-        if (corrige.count(avant[i])) {
+            } else {
 
-            category = "DEVENUE_FAUSSE";
+                history[i].erase(feature);
 
-            fausses++;
+            }
 
-        } else if (apres.count(avant[i])) {
+        }
 
-            category = "ENCORE_VRAIE";
+    }
 
-            vraies++;
+    int A;
+
+    cin >> A;
+
+    vector<Announcement> announcements(A);
+
+    int lies = 0;
+
+    for (int i = 0; i < A; i++) {
+
+        cin >> announcements[i].hash;
+
+        cin >> announcements[i].state;
+
+        cin >> announcements[i].feature;
+
+    }
+
+    for (int i = 0; i < A; i++) {
+
+        const Announcement& announcement = announcements[i];
+
+        int writtenAt = positions[announcement.hash];
+
+        bool shouldExist =
+
+            announcement.state == "DISPONIBLE";
+
+        auto isTrue = [&](int commitIndex) {
+
+            bool exists =
+
+                history[commitIndex].count(announcement.feature) > 0;
+
+            return exists == shouldExist;
+
+        };
+
+        if (isTrue(H - 1)) {
+
+            cout << "ANNONCE " << i + 1 << " VRAI\n";
 
         } else {
 
-            category = "OUBLIEE";
+            int lyingSince = H - 1;
 
-            oubliees++;
+            while (lyingSince > writtenAt &&
+
+                   !isTrue(lyingSince - 1)) {
+
+                lyingSince--;
+
+            }
+
+            cout << "ANNONCE " << i + 1
+
+                 << " MENT "
+
+                 << commits[lyingSince].hash << "\n";
+
+            lies++;
 
         }
 
-        cout << i + 1 << " " << avant[i]
-
-             << " " << category << '\n';
-
     }
 
-    for (const string& key : apres) {
-
-        if (!avantSet.count(key)) {
-
-            nouvelles++;
-
-        }
-
-    }
-
-    int partOubliee = 0;
-
-    if (vraies + oubliees > 0) {
-
-        partOubliee = 100 * oubliees / (vraies + oubliees);
-
-    }
-
-    cout << "VRAIES " << vraies << '\n';
-
-    cout << "FAUSSES " << fausses << '\n';
-
-    cout << "OUBLIEES " << oubliees << '\n';
-
-    cout << "NOUVELLES " << nouvelles << '\n';
-
-    cout << "PART_OUBLIEE " << partOubliee << '\n';
+    cout << "MENSONGES " << lies << "\n";
 
     return 0;
 
