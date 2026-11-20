@@ -1,0 +1,231 @@
+#include <iostream>
+
+#include <string>
+
+#include <vector>
+
+#include <algorithm>
+
+using namespace std;
+
+struct Workaround {
+
+    string name;
+
+    int times = 0;
+
+    int firstTime = 0;
+
+    int firstInput = 0;
+
+    bool mentioned = false;
+
+};
+
+int main() {
+
+    string word;
+
+    int n, m;
+
+    cin >> word >> n;
+
+    vector<Workaround> items;
+
+    int horsSeance = 0;
+
+    int totalObservations = 0;
+
+    for (int i = 0; i < n; ++i) {
+
+        string time, name;
+
+        cin >> time >> name;
+
+        int minutes = stoi(time.substr(0, 2));
+
+        int seconds = stoi(time.substr(3, 2));
+
+        int instant = minutes * 60 + seconds;
+
+        if (instant > 20 * 60) {
+
+            ++horsSeance;
+
+            continue;
+
+        }
+
+        ++totalObservations;
+
+        int index = -1;
+
+        for (int j = 0; j < (int)items.size(); ++j) {
+
+            if (items[j].name == name) {
+
+                index = j;
+
+                break;
+
+            }
+
+        }
+
+        if (index == -1) {
+
+            Workaround item;
+
+            item.name = name;
+
+            item.times = 1;
+
+            item.firstTime = instant;
+
+            item.firstInput = i;
+
+            items.push_back(item);
+
+        } else {
+
+            ++items[index].times;
+
+            if (instant < items[index].firstTime) {
+
+                items[index].firstTime = instant;
+
+            }
+
+        }
+
+    }
+
+    cin >> word >> m;
+
+    vector<string> said;
+
+    for (int i = 0; i < m; ++i) {
+
+        string name;
+
+        cin >> name;
+
+        said.push_back(name);
+
+    }
+
+    for (int i = 0; i < (int)items.size(); ++i) {
+
+        for (int j = 0; j < (int)said.size(); ++j) {
+
+            if (items[i].name == said[j]) {
+
+                items[i].mentioned = true;
+
+                break;
+
+            }
+
+        }
+
+    }
+
+    sort(items.begin(), items.end(),
+
+         [](const Workaround& a, const Workaround& b) {
+
+             if (a.times != b.times) {
+
+                 return a.times > b.times;
+
+             }
+
+             if (a.firstTime != b.firstTime) {
+
+                 return a.firstTime < b.firstTime;
+
+             }
+
+             return a.firstInput < b.firstInput;
+
+         });
+
+    int nonDits = 0;
+
+    int nonDitTimes = 0;
+
+    for (const Workaround& item : items) {
+
+        cout << item.name << " " << item.times << " ";
+
+        if (item.mentioned) {
+
+            cout << "DIT\n";
+
+        } else {
+
+            cout << "NON_DIT\n";
+
+            ++nonDits;
+
+            nonDitTimes += item.times;
+
+        }
+
+    }
+
+    int partNonDite = 0;
+
+    if (totalObservations > 0) {
+
+        partNonDite = 100 * nonDitTimes / totalObservations;
+
+    }
+
+    cout << "NON_DITS " << nonDits << "\n";
+
+    cout << "PART_NON_DITE " << partNonDite << "\n";
+
+    cout << "DIT_SANS_VU";
+
+    bool found = false;
+
+    for (const string& name : said) {
+
+        bool observed = false;
+
+        for (const Workaround& item : items) {
+
+            if (item.name == name) {
+
+                observed = true;
+
+                break;
+
+            }
+
+        }
+
+        if (!observed) {
+
+            cout << " " << name;
+
+            found = true;
+
+        }
+
+    }
+
+    if (!found) {
+
+        cout << " AUCUN";
+
+    }
+
+    cout << "\n";
+
+    cout << "HORS_SEANCE " << horsSeance << "\n";
+
+    return 0;
+
+}
