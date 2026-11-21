@@ -1,0 +1,21 @@
+10
+
+charger_image 5 2 SUPPOSEE MANQUE
+
+voir_apercu 5 1 SUPPOSEE MANQUE
+
+exporter_image 4 2 SUPPOSEE MANQUE
+
+annuler_action 3 4 SUPPOSEE MANQUE
+
+recherche_par_nom 4 3 SUPPOSEE MANQUE
+
+historique_actions 2 2 SUPPOSEE SOCLE annuler_action
+
+partage_public 2 5 SUPPOSEE MANQUE
+
+raccourcis 2 3 SUPPOSEE MANQUE
+
+refonte_visuelle 5 5 SUPPOSEE REECRITURE
+
+mode_sombre 3 1 - MANQUE
