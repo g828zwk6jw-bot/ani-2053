@@ -1,0 +1,23 @@
+
+
+HORS_LISTE refonte_visuelle reecriture
+
+HORS_LISTE mode_sombre sans_label
+
+CELL MAINTENANT charger_image SUPPOSEE
+
+CELL MAINTENANT exporter_image SUPPOSEE
+
+CELL MAINTENANT historique_actions SUPPOSEE
+
+CELL MAINTENANT voir_apercu SUPPOSEE
+
+CELL DECOUPER annuler_action SUPPOSEE
+
+CELL DECOUPER recherche_par_nom SUPPOSEE
+
+CELL ON_NE_LE_FAIT_PAS partage_public SUPPOSEE
+
+CELL ON_NE_LE_FAIT_PAS raccourcis SUPPOSEE
+
+VERDICT HONNETE
