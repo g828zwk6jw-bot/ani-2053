@@ -1,0 +1,211 @@
+#include <iostream>
+
+#include <fstream>
+
+#include <sstream>
+
+#include <vector>
+
+#include <string>
+
+#include <algorithm>
+
+using namespace std;
+
+struct Entry {
+
+    string name;
+
+    int value;
+
+    int cost;
+
+    string label;
+
+    string kind;
+
+    string target;
+
+    string cell;
+
+};
+
+int main() {
+
+    ifstream file("matrice.txt");
+
+    if (!file) {
+
+        cerr << "Cannot open matrice.txt\n";
+
+        return 1;
+
+    }
+
+    int n;
+
+    file >> n;
+
+    vector<Entry> entries;
+
+    for (int i = 0; i < n; i++) {
+
+        Entry e;
+
+        file >> e.name >> e.value >> e.cost
+
+             >> e.label >> e.kind;
+
+        if (e.kind == "SOCLE") {
+
+            file >> e.target;
+
+        }
+
+        entries.push_back(e);
+
+    }
+
+    file.close();
+
+    for (auto &e : entries) {
+
+        if (e.kind == "REECRITURE" ||
+
+            e.kind == "CHOIX" ||
+
+            e.label == "-") {
+
+            continue;
+
+        }
+
+        if (e.kind == "SOCLE") {
+
+            for (const auto &target : entries) {
+
+                if (target.name == e.target) {
+
+                    e.value = max(e.value, target.value);
+
+                    break;
+
+                }
+
+            }
+
+        }
+
+        bool highValue = e.value >= 3;
+
+        bool highCost = e.cost >= 3;
+
+        if (highValue && !highCost)
+
+            e.cell = "MAINTENANT";
+
+        else if (highValue && highCost)
+
+            e.cell = "DECOUPER";
+
+        else if (!highValue && !highCost)
+
+            e.cell = "EN_PASSANT";
+
+        else
+
+            e.cell = "ON_NE_LE_FAIT_PAS";
+
+    }
+
+    for (const auto &e : entries) {
+
+        if (e.kind == "REECRITURE") {
+
+            cout << "HORS_LISTE " << e.name
+
+                 << " reecriture\n";
+
+        }
+
+        else if (e.kind == "CHOIX") {
+
+            cout << "HORS_LISTE " << e.name
+
+                 << " choix\n";
+
+        }
+
+        else if (e.label == "-") {
+
+            cout << "HORS_LISTE " << e.name
+
+                 << " sans_label\n";
+
+        }
+
+    }
+
+    vector<Entry> sorted;
+
+    for (const auto &e : entries) {
+
+        if (!e.cell.empty())
+
+            sorted.push_back(e);
+
+    }
+
+    vector<string> order = {
+
+        "MAINTENANT",
+
+        "DECOUPER",
+
+        "EN_PASSANT",
+
+        "ON_NE_LE_FAIT_PAS"
+
+    };
+
+    sort(sorted.begin(), sorted.end(),
+
+        [&](const Entry &a, const Entry &b) {
+
+            int pa = find(order.begin(), order.end(),
+
+                          a.cell) - order.begin();
+
+            int pb = find(order.begin(), order.end(),
+
+                          b.cell) - order.begin();
+
+            if (pa != pb)
+
+                return pa < pb;
+
+            return a.name < b.name;
+
+        });
+
+    bool refused = false;
+
+    for (const auto &e : sorted) {
+
+        cout << "CELL " << e.cell << " "
+
+             << e.name << " " << e.label << "\n";
+
+        if (e.cell == "ON_NE_LE_FAIT_PAS")
+
+            refused = true;
+
+    }
+
+    if (refused)
+
+        cout << "VERDICT HONNETE\n";
+
+    return 0;
+
+}
