@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
 using namespace std;
 
 struct Component {
@@ -21,255 +20,191 @@ struct Component {
 
     void touch() {
         changed = true;
-
-        if (depuisModif) {
-            elapsed = 0;
-        }
+        if (depuisModif) elapsed = 0;
     }
 
     bool tick(long long d) {
-        if (zeroIgnore && d <= 0) {
-            return false;
-        }
+        if (zeroIgnore && d <= 0) return false;
 
-        if (d > 0 || (negatifCompte && d < 0)) {
+        if (d > 0 || (negatifCompte && d < 0))
             elapsed += d;
-        }
 
         bool condition = sansSalete || changed;
 
-        if (strict) {
+        if (strict)
             return condition && elapsed > interval;
-        }
 
         return condition && elapsed >= interval;
     }
 
     void saved() {
-        if (!savedGardeSalete) {
-            changed = false;
-        }
-
-        if (!savedGardeTemps) {
-            elapsed = 0;
-        }
+        if (!savedGardeSalete) changed = false;
+        if (!savedGardeTemps) elapsed = 0;
     }
 };
 
 int main() {
     string line;
-
     int detectes = 0;
     int nonDetectes = 0;
-
-    vector<string> angleMort;
-
-    const string document = "D:/planches/personnages.nkref";
+    vector<string> angles;
 
     while (getline(cin, line)) {
-        if (line.empty()) {
-            continue;
-        }
+        if (line.empty()) continue;
 
         istringstream input(line);
+        string name, fault;
 
-        string nom;
-        string fault;
+        if (!(input >> name)) continue;
 
-        input >> nom;
-
-        Component c;
-
+        Component base;
         bool faulty = false;
-        bool secoursFixe = false;
         bool secoursEstDoc = false;
+        bool secoursFixe = false;
         bool sansNomVide = false;
 
         while (input >> fault) {
-            if (fault == "AUCUN") {
-                break;
-            }
+            if (fault == "AUCUN") break;
 
             faulty = true;
 
-            if (fault == "SANS_SALETE") {
-                c.sansSalete = true;
-            } else if (fault == "DEPUIS_MODIF") {
-                c.depuisModif = true;
-            } else if (fault == "SAVED_GARDE_TEMPS") {
-                c.savedGardeTemps = true;
-            } else if (fault == "SAVED_GARDE_SALETE") {
-                c.savedGardeSalete = true;
-            } else if (fault == "STRICT") {
-                c.strict = true;
-            } else if (fault == "ZERO_IGNORE") {
-                c.zeroIgnore = true;
-            } else if (fault == "NEGATIF_COMPTE") {
-                c.negatifCompte = true;
-            } else if (fault == "SECOURS_FIXE") {
-                secoursFixe = true;
-            } else if (fault == "SECOURS_EST_DOC") {
+            if (fault == "SANS_SALETE")
+                base.sansSalete = true;
+            else if (fault == "DEPUIS_MODIF")
+                base.depuisModif = true;
+            else if (fault == "SAVED_GARDE_TEMPS")
+                base.savedGardeTemps = true;
+            else if (fault == "SAVED_GARDE_SALETE")
+                base.savedGardeSalete = true;
+            else if (fault == "STRICT")
+                base.strict = true;
+            else if (fault == "ZERO_IGNORE")
+                base.zeroIgnore = true;
+            else if (fault == "NEGATIF_COMPTE")
+                base.negatifCompte = true;
+            else if (fault == "SECOURS_EST_DOC")
                 secoursEstDoc = true;
-            } else if (fault == "SANS_NOM_VIDE") {
+            else if (fault == "SECOURS_FIXE")
+                secoursFixe = true;
+            else if (fault == "SANS_NOM_VIDE")
                 sansNomVide = true;
-            }
         }
 
-        vector<int> echecs;
+        vector<int> failed;
 
         // Test 1
-        Component test1 = c;
-        test1.interval = 60;
-
-        for (int i = 0; i < 3600; i++) {
-            if (test1.tick(1)) {
-                echecs.push_back(1);
+        Component c1 = base;
+        bool test1 = true;
+        for (int i = 0; i < 3600; ++i) {
+            if (c1.tick(1)) {
+                test1 = false;
                 break;
             }
         }
+        if (!test1) failed.push_back(1);
 
-        // Tests 2 and 3 on the same component
-        Component test23 = c;
-        test23.interval = 60;
-        test23.touch();
+        // Tests 2 and 3: same component
+        Component c23 = base;
+        c23.touch();
 
-        bool test2Pass = true;
-
-        for (int i = 0; i < 59; i++) {
-            if (test23.tick(1)) {
-                test2Pass = false;
-                break;
-            }
+        bool test2 = true;
+        for (int i = 0; i < 59; ++i) {
+            if (c23.tick(1)) test2 = false;
         }
+        if (!test2) failed.push_back(2);
 
-        if (!test2Pass) {
-            echecs.push_back(2);
-        } else if (!test23.tick(1)) {
-            echecs.push_back(3);
+        bool test3 = c23.tick(1);
+        if (!test3) failed.push_back(3);
+
+        // Tests 4 and 5: same component
+        Component c45 = base;
+        c45.touch();
+
+        for (int i = 0; i < 60; ++i)
+            c45.tick(1);
+
+        c45.saved();
+
+        bool test4 = true;
+        for (int i = 0; i < 120; ++i) {
+            if (c45.tick(1)) test4 = false;
         }
+        if (!test4) failed.push_back(4);
 
-        // Tests 4 and 5 on the same component
-        Component test45 = c;
-        test45.interval = 60;
-        test45.touch();
-
-        for (int i = 0; i < 60; i++) {
-            test45.tick(1);
-        }
-
-        test45.saved();
-
-        bool test4Pass = true;
-
-        for (int i = 0; i < 120; i++) {
-            if (test45.tick(1)) {
-                test4Pass = false;
-                break;
-            }
-        }
-
-        if (!test4Pass) {
-            echecs.push_back(4);
-        }
-
-        test45.touch();
-
-        if (!test45.tick(0)) {
-            echecs.push_back(5);
-        }
+        c45.touch();
+        if (!c45.tick(0)) failed.push_back(5);
 
         // Test 6
-        Component test6 = c;
-        test6.interval = 10;
-        test6.touch();
-        test6.saved();
+        Component c6 = base;
+        c6.interval = 10;
+        c6.touch();
+        c6.saved();
 
-        bool test6Pass = true;
-
-        for (int i = 0; i < 100; i++) {
-            if (test6.tick(1)) {
-                test6Pass = false;
-                break;
-            }
+        bool test6 = true;
+        for (int i = 0; i < 100; ++i) {
+            if (c6.tick(1)) test6 = false;
         }
+        if (!test6) failed.push_back(6);
 
-        if (!test6Pass) {
-            echecs.push_back(6);
-        }
-
-        // Test 7 and 8
+        // Tests 7, 8 and 9: backup name
+        string document = "D:/planches/personnages.nkref";
         string secours;
 
-        if (secoursFixe) {
+        if (secoursFixe)
             secours = "secours.nkref.auto";
-        } else if (secoursEstDoc) {
+        else if (secoursEstDoc)
             secours = document;
-        } else {
+        else
             secours = document + ".auto";
-        }
 
-        if (secours == document) {
-            echecs.push_back(7);
-        }
+        if (secours == document)
+            failed.push_back(7);
 
-        if (secours.compare(0, document.size(), document) != 0) {
-            echecs.push_back(8);
-        }
+        if (secours.rfind(document, 0) != 0)
+            failed.push_back(8);
 
-        // Test 9
-        string secoursVide;
+        string emptyDocument;
+        string emptySecours;
 
-        if (secoursFixe) {
-            secoursVide = "secours.nkref.auto";
-        } else if (secoursEstDoc || sansNomVide) {
-            secoursVide = "";
-        } else {
-            secoursVide = "planche-sans-nom.nkref.auto";
-        }
+        if (secoursFixe)
+            emptySecours = "secours.nkref.auto";
+        else if (secoursEstDoc || sansNomVide)
+            emptySecours = "";
+        else
+            emptySecours = "planche-sans-nom.nkref.auto";
 
-        if (secoursVide.empty()) {
-            echecs.push_back(9);
-        }
+        if (emptySecours.empty())
+            failed.push_back(9);
 
-        // Results
-        if (echecs.empty()) {
-            cout << nom << " PASSE\n";
+        if (failed.empty()) {
+            cout << name << " PASSE\n";
 
             if (faulty) {
-                nonDetectes++;
-                angleMort.push_back(nom);
+                ++nonDetectes;
+                angles.push_back(name);
             }
         } else {
-            cout << nom << " ECHOUE";
-
-            for (int test : echecs) {
+            cout << name << " ECHOUE";
+            for (int test : failed)
                 cout << " " << test;
-            }
+            cout << "\n";
 
-            cout << '\n';
-
-            if (faulty) {
-                detectes++;
-            }
+            if (faulty) ++detectes;
         }
     }
 
-    cout << "DETECTES " << detectes << '\n';
-    cout << "NON_DETECTES " << nonDetectes << '\n';
-
+    cout << "DETECTES " << detectes << "\n";
+    cout << "NON_DETECTES " << nonDetectes << "\n";
     cout << "ANGLE_MORT";
 
-    if (angleMort.empty()) {
+    if (angles.empty()) {
         cout << " AUCUN";
     } else {
-        for (const string& nom : angleMort) {
-            cout << " " << nom;
-        }
+        for (const string& name : angles)
+            cout << " " << name;
     }
 
-    cout << '\n';
-
+    cout << "\n";
     return 0;
 }
 
-     
